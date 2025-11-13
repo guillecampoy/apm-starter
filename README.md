@@ -16,6 +16,7 @@ Incluye ejemplos de uso en **Controller, Service, Repository** y **HTTP saliente
 - Docker y Docker Compose
 
 ## Puesta en marcha
+0. Ejecutar en consola : export JAVA_TOOL_OPTIONS="-javaagent:./opentelemetry-javaagent.jar -Dotel.service.name=wallet-transfers -Dotel.exporter.otlp.endpoint=http://localhost:4317 -Dotel.metrics.exporter=none"
 1. Levantar el stack de observabilidad:
    ```bash
    cd docker
