@@ -1,0 +1,16 @@
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/config/ApmAutoConfiguration.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/apmdemo/Loan.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/apm/OtelApmClient.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/apm/TracingAspect.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/apmdemo/PaymentGateway.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/apm/TraceSpan.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/apm/ApmSpan.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/apmdemo/LoanService.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/apm/AbstractApmClient.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/apm/ApmProperties.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/apmdemo/LoanRepository.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/apm/WebTracingFilter.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/apmdemo/ExternalController.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/apmdemo/ApmDemoApplication.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/apmdemo/LoanController.java
+/Users/gcampoy/Proyectos/apm-starter/src/main/java/com/acme/obs/apm/ApmClient.java
