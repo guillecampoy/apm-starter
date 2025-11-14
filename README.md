@@ -88,27 +88,27 @@ observability:
     endpoint: "http://127.0.0.1:4317"
     metricsEnabled: false
 ```
-> El `endpoint` apunta al Jaeger local (con OTLP habilitado). Si querés exportar métricas, montá un Collector propio y poné `metricsEnabled: true`.
+> El `endpoint` apunta al Jaeger local (con OTLP habilitado). Es posible exportar métricas, se requiere un Collector propio modificar `metricsEnabled: true`.
 
 ## Extensión a otros vendors
 Implementar otra clase que extienda `AbstractApmClient` (ej.: `NewRelicApmClient`, `DatadogApmClient`) respetando `ApmClient`.
 El dominio (controllers/services/repos) no cambia. El selector de vendor está en `ApmAutoConfiguration`.
 
 ## Métricas
-El ejemplo incluye métodos para contadores e histogramas vía OpenTelemetry Metrics. Podés integrar Prometheus/Grafana agregando
-un exporter en el Collector (no incluido para mantenerlo simple).
+El ejemplo incluye métodos para contadores e histogramas vía OpenTelemetry Metrics. Es posible integrar Prometheus/Grafana agregando
+un exporter en el Collector (fuera de scope de este prototipo).
 
-## Seguridad y PII
-- Evitá `recordArgs=true` en `@TraceSpan` para métodos con PII.
-- Normalizá rutas (`/loans/{id}`) en `setTransactionName` para agregación.
+## Seguridad y PII (recomendación importante LEER!!!)
+- Evitar `recordArgs=true` en `@TraceSpan` para métodos con PII. (es importante definirlos para no estar almacenando datos sensibles)
+- Normalizar rutas (`/loans/{id}`) en `setTransactionName` para agregación.
 
 ## Troubleshooting
-- ¿No ves spans? Verificar:
+- ¿No se ven los spans? Verificar:
   - La app apunta a `http://127.0.0.1:4317` (Jaeger con OTLP habilitado).
   - Jaeger (docker) corriendo y exponiendo `16686/4317`.
   - Reloj del sistema correcto.
-- ¿Puerto 8080 ocupado? Seteá `SERVER_PORT` o deja que el auto-fallback elija uno libre (se muestra en los logs).
-- ¿WireMock en 8089 no responde? Asegurate de que `docker compose up -d` esté corriendo (servicio `wiremock`).
+- ¿Puerto 8080 ocupado? Seteá `SERVER_PORT` o deja que el auto-fallback elija uno libre (se puede ver cuando levanta la app de spring boot).
+- ¿WireMock en 8089 no responde? Revisar que `docker compose up -d` esté corriendo (servicio `wiremock`).
 - Logs de Collector/Jaeger: `docker compose logs -f` dentro de `docker/`.
 
 ---
