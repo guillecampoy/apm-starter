@@ -48,7 +48,7 @@ Servicios:
 
 4. Ver las trazas en Jaeger:
    - Abrir **Jaeger UI**: http://localhost:16686
-   - Buscar servicio: `wallet-transfers` (o el que definas en `application.yml`)
+   - Buscar servicio: `wallet-transfers` (definido en `application.yml`)
    - Explorar spans: `HTTP GET/POST`, `approve_loan`, `db_*`, `HTTP OUT`
 
 ## Estructura
