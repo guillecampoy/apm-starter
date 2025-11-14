@@ -1,9 +1,11 @@
 .gradle
 build/
+target/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 .kotlin
+.codex/
 
 ### IntelliJ IDEA ###
 .idea/
