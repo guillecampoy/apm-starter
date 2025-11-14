@@ -63,16 +63,22 @@ public class OtelApmClient extends AbstractApmClient {
           .build())
       .build();
 
-    OtlpGrpcMetricExporter metricExporter = OtlpGrpcMetricExporter.builder()
-      .setEndpoint(defaulted(props.getEndpoint(), "http://localhost:4317"))
-      .build();
-
-    SdkMeterProvider meterProvider = SdkMeterProvider.builder()
-      .setResource(resource)
-      .registerMetricReader(PeriodicMetricReader.builder(metricExporter)
-          .setInterval(Duration.ofSeconds(10))
-          .build())
-      .build();
+    SdkMeterProvider meterProvider;
+    if (props.isMetricsEnabled()) {
+      OtlpGrpcMetricExporter metricExporter = OtlpGrpcMetricExporter.builder()
+        .setEndpoint(defaulted(props.getEndpoint(), "http://localhost:4317"))
+        .build();
+      meterProvider = SdkMeterProvider.builder()
+        .setResource(resource)
+        .registerMetricReader(PeriodicMetricReader.builder(metricExporter)
+            .setInterval(Duration.ofSeconds(10))
+            .build())
+        .build();
+    } else {
+      meterProvider = SdkMeterProvider.builder()
+        .setResource(resource)
+        .build();
+    }
 
     this.openTelemetry = OpenTelemetrySdk.builder()
       .setTracerProvider(tracerProvider)
@@ -141,13 +147,28 @@ public class OtelApmClient extends AbstractApmClient {
   }
 
   @Override public void recordHistogram(String name, double value, Map<String, String> tags) {
-    DoubleHistogram h = histos.computeIfAbsent(name, n -> (DoubleHistogram) meter.histogramBuilder(n).ofLongs().build());
+    DoubleHistogram h = histos.computeIfAbsent(name, n -> meter.histogramBuilder(n).build());
     h.record(value, mapToAttributes(tags));
   }
 
   @Override public void gauge(String name, double value, Map<String, String> tags) {
     // Emulado via histogram sample
     recordHistogram(name+".gauge", value, tags);
+  }
+
+  @Override public void setAttribute(String key, String value) {
+    Span span = Span.current();
+    if(span != null) span.setAttribute(key, value);
+  }
+
+  @Override public void setAttribute(String key, long value) {
+    Span span = Span.current();
+    if(span != null) span.setAttribute(key, value);
+  }
+
+  @Override public void setAttribute(String key, double value) {
+    Span span = Span.current();
+    if(span != null) span.setAttribute(key, value);
   }
 
   private Attributes mapToAttributes(Map<String,String> tags){
@@ -161,7 +182,7 @@ public class OtelApmClient extends AbstractApmClient {
     openTelemetry.getPropagators().getTextMapPropagator().inject(Context.current(), headerSetter, setter);
   }
 
-  @Override public void extractContext(java.util.function.Function<String, String> headerGetter) {
+  @Override public ApmScope extractContext(java.util.function.Function<String, String> headerGetter) {
     TextMapGetter<java.util.function.Function<String,String>> getter = new TextMapGetter<>() {
       @Override public Iterable<String> keys(java.util.function.Function<String, String> carrier) { return java.util.List.of("traceparent","tracestate"); }
       @Override public String get(java.util.function.Function<String, String> carrier, String key) {
@@ -169,6 +190,7 @@ public class OtelApmClient extends AbstractApmClient {
       }
     };
     Context ctx = openTelemetry.getPropagators().getTextMapPropagator().extract(Context.current(), headerGetter, getter);
-    ctx.makeCurrent();
+    Scope scope = ctx.makeCurrent();
+    return scope::close;
   }
 }

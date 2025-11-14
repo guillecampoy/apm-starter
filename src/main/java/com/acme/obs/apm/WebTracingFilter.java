@@ -25,7 +25,7 @@ public class WebTracingFilter extends OncePerRequestFilter {
                            .orElse(UUID.randomUUID().toString());
     MDC.put("requestId", reqId);
 
-    apm.extractContext(req::getHeader);
+    ApmScope extracted = apm.extractContext(req::getHeader);
     java.util.Map<String,String> attrs = new java.util.HashMap<>(Map.of(
       "http.method", req.getMethod(),
       "http.target", req.getRequestURI(),
@@ -35,19 +35,21 @@ public class WebTracingFilter extends OncePerRequestFilter {
 
     String displayedName = req.getMethod()+" "+req.getRequestURI();
 
-    try (ApmSpan span = apm.startSpan("HTTP " + displayedName, attrs)) {
-      // Renombrar a ruta templada si está disponible
+    try (extracted; ApmSpan span = apm.startSpan("HTTP " + displayedName, attrs)) {
       String pattern = (String) req.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (pattern != null) {
         apm.setTransactionName(req.getMethod() + " " + pattern);
+        span.setAttribute("http.route", pattern);
       } else {
         apm.setTransactionName(displayedName);
       }
-      chain.doFilter(req, res);
-      span.setAttribute("http.status_code", res.getStatus());
-    } catch (Throwable t){
-      apm.recordException(t);
-      throw t;
+      try {
+        chain.doFilter(req, res);
+        span.setAttribute("http.status_code", res.getStatus());
+      } catch (Throwable t){
+        span.recordException(t);
+        throw t;
+      }
     } finally {
       MDC.remove("requestId");
     }

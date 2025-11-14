@@ -22,15 +22,17 @@ Incluye ejemplos de uso en **Controller, Service, Repository** y **HTTP saliente
    cd docker
    docker compose up -d
    ```
-   Servicios:
-   - Jaeger UI: http://localhost:16686
-   - OTLP gRPC Collector: `localhost:4317`
+Servicios:
+   - Jaeger UI + OTLP gRPC: http://localhost:16686 (collector expuesto en `127.0.0.1:4317`)
+   - WireMock demo (pagos HTTP de salida): http://localhost:8089/__admin
 
 2. Arrancar la aplicación:
    ```bash
    cd ..
    mvn spring-boot:run
    ```
+   > El servicio intenta usar el puerto definido en `SERVER_PORT` (default 8080).  
+   > Si está ocupado, buscará automáticamente otro disponible y lo indicará en el log de arranque.
 
 3. Probar endpoints (crear spans):
    ```bash
@@ -71,6 +73,11 @@ apm-starter/
 ## Configuración clave
 `src/main/resources/application.yml`:
 ```yaml
+server:
+  port: ${SERVER_PORT:8080}  # puede sobrescribirse via env var y auto-fallback
+app:
+  server:
+    port-fallback-attempts: 20
 observability:
   apm:
     vendor: otel
@@ -78,9 +85,10 @@ observability:
     serviceName: "wallet-transfers"
     serviceVersion: "1.0.0"
     environment: "local"
-    endpoint: "http://localhost:4317"
+    endpoint: "http://127.0.0.1:4317"
+    metricsEnabled: false
 ```
-> El `endpoint` apunta al **Collector**. El Collector exporta a **Jaeger** (ver `docker/otel-collector-config.yaml`).
+> El `endpoint` apunta al Jaeger local (con OTLP habilitado). Si querés exportar métricas, montá un Collector propio y poné `metricsEnabled: true`.
 
 ## Extensión a otros vendors
 Implementar otra clase que extienda `AbstractApmClient` (ej.: `NewRelicApmClient`, `DatadogApmClient`) respetando `ApmClient`.
@@ -96,9 +104,11 @@ un exporter en el Collector (no incluido para mantenerlo simple).
 
 ## Troubleshooting
 - ¿No ves spans? Verificar:
-  - La app apunta al Collector (`endpoint`).
-  - Collector escuchando en `4317` y Jaeger en `16686`.
+  - La app apunta a `http://127.0.0.1:4317` (Jaeger con OTLP habilitado).
+  - Jaeger (docker) corriendo y exponiendo `16686/4317`.
   - Reloj del sistema correcto.
+- ¿Puerto 8080 ocupado? Seteá `SERVER_PORT` o deja que el auto-fallback elija uno libre (se muestra en los logs).
+- ¿WireMock en 8089 no responde? Asegurate de que `docker compose up -d` esté corriendo (servicio `wiremock`).
 - Logs de Collector/Jaeger: `docker compose logs -f` dentro de `docker/`.
 
 ---

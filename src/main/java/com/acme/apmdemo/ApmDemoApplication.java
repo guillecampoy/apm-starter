@@ -16,14 +16,17 @@ public class ApmDemoApplication {
   public RestTemplate restTemplate(ApmClient apm){
     RestTemplate rt = new RestTemplate();
     rt.getInterceptors().add((req, body, exec) -> {
-      apm.injectContext((k,v)-> req.getHeaders().add(k,v));
-      try (var span = apm.startSpan("HTTP OUT "+req.getMethod()+" "+req.getURI(), java.util.Map.of("otel.kind","client"))){
-        var resp = exec.execute(req, body);
-        span.setAttribute("http.status_code", resp.getStatusCode().value());
-        return resp;
-      } catch (Exception e){
-        apm.recordException(e);
-        throw e;
+      var span = apm.startSpan("HTTP OUT "+req.getMethod()+" "+req.getURI(), java.util.Map.of("otel.kind","client"));
+      try (span) {
+        apm.injectContext((k,v)-> req.getHeaders().add(k,v));
+        try {
+          var resp = exec.execute(req, body);
+          span.setAttribute("http.status_code", resp.getStatusCode().value());
+          return resp;
+        } catch (Exception e){
+          span.recordException(e);
+          throw e;
+        }
       }
     });
     return rt;

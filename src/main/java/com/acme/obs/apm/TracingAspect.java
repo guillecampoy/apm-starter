@@ -1,14 +1,12 @@
 package com.acme.obs.apm;
 
+import java.util.Map;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Aspect
 @Order(10)
@@ -23,27 +21,32 @@ public class TracingAspect {
     String defaultName = sig.getDeclaringType().getSimpleName()+"#"+sig.getMethod().getName();
     String spanName = trace.value().isEmpty()? defaultName : trace.value();
 
-    Map<String,String> attrs = new HashMap<>();
-    for(String kv : trace.attributes()){
-      int i = kv.indexOf('=');
-      if(i>0) attrs.put(kv.substring(0,i), kv.substring(i+1));
+    SpanAttributeBuilder builder = SpanAttributeBuilder.create()
+      .withLayer(trace.layer())
+      .withComponentDetails(sig.getDeclaringType())
+      .withMethod(sig.getMethod())
+      .withDeclaredAttributes(trace.attributes());
+
+    if(trace.layer() == TelemetryLayer.CONTROLLER){
+      builder.withRequestMetadata(sig.getMethod(), pjp.getArgs());
     }
-    attrs.put("class", sig.getDeclaringTypeName());
-    attrs.put("method", sig.getMethod().getName());
 
     if(trace.recordArgs()){
       Object[] args = pjp.getArgs();
       for(int i=0;i<args.length;i++){
-        attrs.put("arg."+i, String.valueOf(args[i]));
+        builder.withArgument("arg."+i, args[i]);
       }
     }
 
+    Map<String,String> attrs = builder.build();
+
     try (ApmSpan span = apm.startSpan(spanName, attrs)) {
-      Object out = pjp.proceed();
-      return out;
-    } catch(Throwable t){
-      apm.recordException(t);
-      throw t;
+      try {
+        return pjp.proceed();
+      } catch(Throwable t){
+        span.recordException(t);
+        throw t;
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 package com.acme.apmdemo;
 
 import com.acme.obs.apm.ApmClient;
+import com.acme.obs.apm.TelemetryLayer;
 import com.acme.obs.apm.TraceSpan;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -27,16 +28,26 @@ public class LoanRepository {
     }
   };
 
-  @TraceSpan(value="db_find_loan", attributes={"component=repository"})
+  @TraceSpan(
+    value="db_find_loan",
+    layer=TelemetryLayer.REPOSITORY,
+    attributes={"db.operation=select","db.table=loans"}
+  )
   public Loan findById(Long id){
+    apm.setAttribute("db.query.loanId", String.valueOf(id));
     return jdbc.queryForObject("SELECT * FROM loans WHERE id=?", mapper, id);
   }
 
+  @TraceSpan(
+    value="db_update_status",
+    layer=TelemetryLayer.REPOSITORY,
+    attributes={"db.operation=update","db.table=loans"}
+  )
   public int updateStatus(Long id, String status){
-    try (var s = apm.startSpan("db_update_status")){
-      int updated = jdbc.update("UPDATE loans SET status=? WHERE id=?", status, id);
-      s.setAttribute("db.rows_affected", updated);
-      return updated;
-    }
+    apm.setAttribute("db.query.loanId", String.valueOf(id));
+    apm.setAttribute("db.new_status", status);
+    int updated = jdbc.update("UPDATE loans SET status=? WHERE id=?", status, id);
+    apm.setAttribute("db.rows_affected", updated);
+    return updated;
   }
 }

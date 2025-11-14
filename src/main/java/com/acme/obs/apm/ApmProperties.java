@@ -12,6 +12,7 @@ public class ApmProperties {
   private String accountId;
   private String apiKey;
   private String endpoint;
+  private boolean metricsEnabled = false;
   private Map<String,String> defaultTags;
 
   public String getVendor() { return vendor; }
@@ -32,6 +33,8 @@ public class ApmProperties {
   public void setApiKey(String apiKey) { this.apiKey = apiKey; }
   public String getEndpoint() { return endpoint; }
   public void setEndpoint(String endpoint) { this.endpoint = endpoint; }
+  public boolean isMetricsEnabled() { return metricsEnabled; }
+  public void setMetricsEnabled(boolean metricsEnabled) { this.metricsEnabled = metricsEnabled; }
   public Map<String, String> getDefaultTags() { return defaultTags; }
   public void setDefaultTags(Map<String, String> defaultTags) { this.defaultTags = defaultTags; }
 }

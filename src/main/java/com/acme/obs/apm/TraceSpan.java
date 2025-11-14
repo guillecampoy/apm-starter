@@ -11,4 +11,5 @@ public @interface TraceSpan {
   String value() default "";
   String[] attributes() default {};
   boolean recordArgs() default false;
+  TelemetryLayer layer() default TelemetryLayer.INTERNAL;
 }
